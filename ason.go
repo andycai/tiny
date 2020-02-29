@@ -2,18 +2,19 @@ package ason
 
 import (
 	"reflect"
-	"strconv"
 	"strings"
+
+	"github.com/spf13/cast"
 )
 
 var chars = []string{"`", "^", "~", "|", ">>", "<<", "[[", "]]", "{{", "}}", "::", ";;", ",,", "$$", "@@", "##", "&&"}
 
 // struct to string
-func Format(f reflect.Value, level int) (result string) {
+func Marshal(f reflect.Value, level int) (result string) {
 	sep := chars[level]
 	switch f.Kind() {
 	case reflect.Bool:
-		result += strconv.FormatBool(f.Bool())
+		result += cast.ToString(f.Bool())
 	case reflect.String:
 		str := f.String()
 		if str == "" {
@@ -21,19 +22,19 @@ func Format(f reflect.Value, level int) (result string) {
 		}
 		result += str
 	case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
-		result += strconv.FormatInt(f.Int(), 10)
+		result += cast.ToString(f.Int())
 	case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
-		result += strconv.FormatUint(f.Uint(), 10)
+		result += cast.ToString(f.Uint())
 	case reflect.Float32, reflect.Float64:
-		result += strconv.FormatFloat(f.Float(), 'E', -1, 64)
+		result += cast.ToString(f.Float())
 	case reflect.Array, reflect.Slice:
 		count := f.Len()
 		str := ""
 		for i := 0; i < count; i++ {
 			if i >= count-1 {
-				str += Format(f.Index(i), level+1)
+				str += Marshal(f.Index(i), level+1)
 			} else {
-				str += Format(f.Index(i), level+1) + sep
+				str += Marshal(f.Index(i), level+1) + sep
 			}
 		}
 		if str == "" {
@@ -45,9 +46,9 @@ func Format(f reflect.Value, level int) (result string) {
 		str := ""
 		for i := 0; i < count; i++ {
 			if i >= count-1 {
-				str += Format(f.Field(i), level+1)
+				str += Marshal(f.Field(i), level+1)
 			} else {
-				str += Format(f.Field(i), level+1) + sep
+				str += Marshal(f.Field(i), level+1) + sep
 			}
 		}
 		if str == "" {
@@ -64,16 +65,16 @@ func Format(f reflect.Value, level int) (result string) {
 			case reflect.String:
 				s = k.String()
 			case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
-				s = strconv.FormatInt(k.Int(), 10)
+				s = cast.ToString(k.Int())
 			case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
-				s = strconv.FormatUint(k.Uint(), 10)
+				s = cast.ToString(k.Uint())
 			case reflect.Float32, reflect.Float64:
-				s = strconv.FormatFloat(k.Float(), 'E', -1, 64)
+				s = cast.ToString(k.Float())
 			}
 			if i >= count-1 {
-				str += s + chars[level+1] + Format(f.MapIndex(k), level+2)
+				str += s + chars[level+1] + Marshal(f.MapIndex(k), level+2)
 			} else {
-				str += s + chars[level+1] + Format(f.MapIndex(k), level+2) + sep
+				str += s + chars[level+1] + Marshal(f.MapIndex(k), level+2) + sep
 			}
 		}
 		if str == "" {
@@ -85,46 +86,33 @@ func Format(f reflect.Value, level int) (result string) {
 }
 
 // string to struct
-func Parse(str string, f reflect.Value, level int) {
-	arr := strings.Split(str, chars[level])
-	count := len(arr)
+func Unmarshal(str string, f reflect.Value, level int) {
+	fields := strings.Split(str, chars[level])
+	count := len(fields)
 
 	switch f.Kind() {
 	case reflect.Bool:
-		val, err := strconv.ParseBool(str)
-		if err == nil {
-			f.SetBool(val)
-		}
+		f.SetBool(cast.ToBool(str))
 	case reflect.String:
 		if str == "''" {
 			str = ""
 		}
 		f.SetString(str)
 	case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
-		val, err := strconv.ParseInt(str, 10, 64)
-		if err == nil {
-			f.SetInt(val)
-		}
+		f.SetInt(cast.ToInt64(str))
 	case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
-		val, err := strconv.ParseUint(str, 10, 64)
-		if err == nil {
-			f.SetUint(val)
-		}
+		f.SetUint(cast.ToUint64(str))
 	case reflect.Float32, reflect.Float64:
-		val, err := strconv.ParseFloat(str, 64)
-		if err == nil {
-			f.SetFloat(val)
-		}
+		f.SetFloat(cast.ToFloat64(str))
 	case reflect.Ptr:
-		d := f.Elem()
-		Parse(str, d, level)
+		Unmarshal(str, f.Elem(), level)
 	case reflect.Array:
 		count := f.Len()
 		if str == "[]" {
 			str = ""
 		}
 		for i := 0; i < count; i++ {
-			Parse(arr[i], f.Index(i), level+1)
+			Unmarshal(fields[i], f.Index(i), level+1)
 		}
 	case reflect.Slice:
 		if str == "[]" {
@@ -133,7 +121,7 @@ func Parse(str string, f reflect.Value, level int) {
 		slice := reflect.MakeSlice(f.Type(), count, count)
 		f.Set(slice)
 		for i := 0; i < count; i++ {
-			Parse(arr[i], f.Index(i), level+1)
+			Unmarshal(fields[i], f.Index(i), level+1)
 		}
 	case reflect.Struct:
 		if str == "{}" {
@@ -141,7 +129,7 @@ func Parse(str string, f reflect.Value, level int) {
 		}
 		count := f.NumField()
 		for i := 0; i < count; i++ {
-			Parse(arr[i], f.Field(i), level+1)
+			Unmarshal(fields[i], f.Field(i), level+1)
 		}
 	case reflect.Map:
 		if str == "{}" {
@@ -159,9 +147,9 @@ func Parse(str string, f reflect.Value, level int) {
 		v := reflect.MakeMap(t)
 
 		for i := 0; i < count; i++ {
-			arr1 := strings.Split(arr[i], chars[level+1])
-			ks := arr1[0]
-			vs := arr1[1]
+			mapFields := strings.Split(fields[i], chars[level+1])
+			ks := mapFields[0]
+			vs := mapFields[1]
 			if !mapElem.IsValid() {
 				mapElem = reflect.New(elemType).Elem()
 			} else {
@@ -182,17 +170,11 @@ func Parse(str string, f reflect.Value, level int) {
 			case reflect.String:
 				kv = reflect.ValueOf(ks).Convert(kt)
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				n, err := strconv.ParseInt(ks, 10, 64)
-				if err == nil {
-					kv = reflect.ValueOf(n).Convert(kt)
-				}
+				kv = reflect.ValueOf(cast.ToInt64(ks)).Convert(kt)
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				n, err := strconv.ParseUint(ks, 10, 64)
-				if err == nil {
-					kv = reflect.ValueOf(n).Convert(kt)
-				}
+				kv = reflect.ValueOf(cast.ToUint64(ks)).Convert(kt)
 			}
-			Parse(vs, subv, level+2)
+			Unmarshal(vs, subv, level+2)
 			if kv.IsValid() {
 				v.SetMapIndex(kv, subv)
 			}
