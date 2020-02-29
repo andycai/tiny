@@ -1,8 +1,8 @@
 package ason
 
 import (
+	"encoding/json"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,12 +46,12 @@ func TestASON_Marshal(t *testing.T) {
 	p.CurCard = Card{9999, "don't cry"}
 	p.Map2 = map[string]string{"aaa": "vvvv", "bbb": "uuuuu"}
 
-	v := reflect.ValueOf(p)
-	result := Marshal(v, 0)
+	// v := reflect.ValueOf(p)
+	result := Marshal(p)
 	errmsg := fmt.Sprintf("result: %s", result)
 	assert.Equal(t, testStr, result, errmsg)
 
-	//fmt.Println("struct to string: ", result)
+	fmt.Println("struct to string: ", result)
 }
 
 func TestASON_Unmarshal(t *testing.T) {
@@ -60,8 +60,9 @@ func TestASON_Unmarshal(t *testing.T) {
 	p2.Name = "jim"
 	p2.Age = 999999
 	p2.Count = 888888
-	v2 := reflect.ValueOf(&p2)
-	Unmarshal(testStr, v2.Elem(), 0)
+	// v2 := reflect.ValueOf(&p2)
+	// Unmarshal(testStr, v2.Elem())
+	Unmarshal(testStr, &p2)
 
 	assert.Equal(t, "joe", p2.Name, "")
 	assert.Equal(t, 30, p2.Age, "")
@@ -69,6 +70,7 @@ func TestASON_Unmarshal(t *testing.T) {
 	assert.Equal(t, "dddddd", p2.Map2["ccc"], "")
 	assert.Equal(t, int32(888), p2.Map3[777], "")
 
-	// p2v, _ := json.Marshal(p2)
-	// fmt.Println("string to struct: ", string(p2v))
+	p2v, _ := json.Marshal(p2)
+	// json.Unmarshal()
+	fmt.Println("string to struct: ", string(p2v))
 }

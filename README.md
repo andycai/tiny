@@ -39,7 +39,7 @@ Ason is another small object notation.
         p.Map2 = map[string]string{"aaa": "vvvv", "bbb": "uuuuu"}
 
         v := reflect.ValueOf(p)
-        result := Marshal(v, 0)
+        result := Marshal(v)
         fmt.Println("struct to string: ", result)
 
         var p2 Person
