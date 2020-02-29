@@ -6,16 +6,20 @@ import (
 	"strings"
 )
 
-var chars = []string{"`", "^", "~", "|", "[", "]", "{", "}", "::", ";;", ",,", ">>", "<<", "$$", "@@", "##", "&&"}
+var chars = []string{"`", "^", "~", "|", ">>", "<<", "[[", "]]", "{{", "}}", "::", ";;", ",,", "$$", "@@", "##", "&&"}
 
 // struct to string
 func Format(f reflect.Value, level int) (result string) {
 	sep := chars[level]
 	switch f.Kind() {
-	case reflect.Bool: // TODO
+	case reflect.Bool:
 		result += strconv.FormatBool(f.Bool())
 	case reflect.String:
-		result += f.String()
+		str := f.String()
+		if str == "" {
+			str = "''"
+		}
+		result += str
 	case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
 		result += strconv.FormatInt(f.Int(), 10)
 	case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
@@ -32,6 +36,9 @@ func Format(f reflect.Value, level int) (result string) {
 				str += Format(f.Index(i), level+1) + sep
 			}
 		}
+		if str == "" {
+			str = "[]"
+		}
 		result += str
 	case reflect.Struct:
 		count := f.NumField()
@@ -42,6 +49,9 @@ func Format(f reflect.Value, level int) (result string) {
 			} else {
 				str += Format(f.Field(i), level+1) + sep
 			}
+		}
+		if str == "" {
+			str = "{}"
 		}
 		result += str
 	case reflect.Map:
@@ -66,6 +76,9 @@ func Format(f reflect.Value, level int) (result string) {
 				str += s + chars[level+1] + Format(f.MapIndex(k), level+2) + sep
 			}
 		}
+		if str == "" {
+			str = "{}"
+		}
 		result += str
 	}
 	return
@@ -83,6 +96,9 @@ func Parse(str string, f reflect.Value, level int) {
 			f.SetBool(val)
 		}
 	case reflect.String:
+		if str == "''" {
+			str = ""
+		}
 		f.SetString(str)
 	case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
 		val, err := strconv.ParseInt(str, 10, 64)
@@ -104,21 +120,33 @@ func Parse(str string, f reflect.Value, level int) {
 		Parse(str, d, level)
 	case reflect.Array:
 		count := f.Len()
+		if str == "[]" {
+			str = ""
+		}
 		for i := 0; i < count; i++ {
 			Parse(arr[i], f.Index(i), level+1)
 		}
 	case reflect.Slice:
+		if str == "[]" {
+			str = ""
+		}
 		slice := reflect.MakeSlice(f.Type(), count, count)
 		f.Set(slice)
 		for i := 0; i < count; i++ {
 			Parse(arr[i], f.Index(i), level+1)
 		}
 	case reflect.Struct:
+		if str == "{}" {
+			str = ""
+		}
 		count := f.NumField()
 		for i := 0; i < count; i++ {
 			Parse(arr[i], f.Field(i), level+1)
 		}
 	case reflect.Map:
+		if str == "{}" {
+			str = ""
+		}
 		t := f.Type()
 		elemType := t.Elem()
 
