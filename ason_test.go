@@ -51,7 +51,7 @@ func TestASON_Marshal(t *testing.T) {
 	errmsg := fmt.Sprintf("result: %s", result)
 	assert.Equal(t, testStr, result, errmsg)
 
-	//fmt.Println("struct to string: ", Format(v, 0))
+	//fmt.Println("struct to string: ", result)
 }
 
 func TestASON_Unmarshal(t *testing.T) {
