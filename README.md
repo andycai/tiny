@@ -2,7 +2,7 @@
 
 Ason is another small object notation.
 
-    `type Card struct {
+    type Card struct {
         Id   int32
         Name string
     }
@@ -50,4 +50,4 @@ Ason is another small object notation.
         Unmarshal("joe`30`true`999`123^456^779`333^34333^353533^3223332`key_j~1001|jjj^key_g~2001|ggg^key_h~3001|hhh`9999^don't cry`1001~jjj^2001~ggg^3001~hhh`9991~zzz^9992~yyy^9993~xxx`ccc~dddddd^xxx~yyyyyy`777~888", v2.Elem(), 0)
         p2v, _ := json.Marshal(p2)
         fmt.Println("string to struct: ", string(p2v))
-    }`
+    }
