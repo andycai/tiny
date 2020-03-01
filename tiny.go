@@ -114,7 +114,6 @@ func unmarshal(str string, v reflect.Value, level int) {
 	case reflect.Bool:
 		v.SetBool(cast.ToBool(str))
 	case reflect.String:
-		println("str: ", str)
 		if str == "''" || str == "nil" {
 			str = ""
 		}
@@ -132,7 +131,11 @@ func unmarshal(str string, v reflect.Value, level int) {
 			unmarshal(str, v.Elem(), level)
 		}
 	case reflect.Interface:
-		unmarshal(str, v.Elem(), level)
+		if str == "nil" {
+			v.Set(reflect.New(v.Type()).Elem())
+		} else {
+			unmarshal(str, v.Elem(), level)
+		}
 	case reflect.Array:
 		count := v.Len()
 		for i := 0; i < count; i++ {
@@ -141,6 +144,7 @@ func unmarshal(str string, v reflect.Value, level int) {
 	case reflect.Slice:
 		if str == "[]" {
 			str = ""
+			count = 0
 		}
 		slice := reflect.MakeSlice(v.Type(), count, count)
 		v.Set(slice)
