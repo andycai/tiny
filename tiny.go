@@ -9,7 +9,7 @@ import (
 
 var chars = []string{"`", "^", "~", "|", ">>", "<<", "[[", "]]", "{{", "}}", "::", ";;", ",,", "$$", "@@", "##", "&&"}
 
-// struct to string
+// Marshal struct to string
 func Marshal(v interface{}) string {
 	return marshal(reflect.ValueOf(v), 0)
 }
@@ -25,12 +25,18 @@ func marshal(v reflect.Value, level int) (result string) {
 			str = "''"
 		}
 		result += str
-	case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		result += cast.ToString(v.Int())
-	case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		result += cast.ToString(v.Uint())
 	case reflect.Float32, reflect.Float64:
 		result += cast.ToString(v.Float())
+	case reflect.Ptr:
+		if v.IsNil() {
+			result += "nil"
+		} else {
+			result += marshal(v.Elem(), level)
+		}
 	case reflect.Array, reflect.Slice:
 		count := v.Len()
 		str := ""
@@ -68,9 +74,9 @@ func marshal(v reflect.Value, level int) (result string) {
 			switch k.Type().Kind() {
 			case reflect.String:
 				s = k.String()
-			case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				s = cast.ToString(k.Int())
-			case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 				s = cast.ToString(k.Uint())
 			case reflect.Float32, reflect.Float64:
 				s = cast.ToString(k.Float())
@@ -85,11 +91,16 @@ func marshal(v reflect.Value, level int) (result string) {
 			str = "{}"
 		}
 		result += str
+	case reflect.Interface:
+		result += marshal(v.Elem(), level)
+	default:
+		// fmt.Println("v.kind(): ", v.Kind())
+		result += "nil"
 	}
 	return
 }
 
-// string to struct
+// Unmarshal string to struct
 func Unmarshal(str string, v interface{}) {
 	rv := reflect.ValueOf(v)
 	unmarshal(str, rv.Elem(), 0)
@@ -103,23 +114,27 @@ func unmarshal(str string, v reflect.Value, level int) {
 	case reflect.Bool:
 		v.SetBool(cast.ToBool(str))
 	case reflect.String:
-		if str == "''" {
+		println("str: ", str)
+		if str == "''" || str == "nil" {
 			str = ""
 		}
 		v.SetString(str)
-	case reflect.Int32, reflect.Int, reflect.Int64, reflect.Int8, reflect.Int16:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		v.SetInt(cast.ToInt64(str))
-	case reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Uint8, reflect.Uint16:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		v.SetUint(cast.ToUint64(str))
 	case reflect.Float32, reflect.Float64:
 		v.SetFloat(cast.ToFloat64(str))
 	case reflect.Ptr:
+		if str == "nil" {
+			v.Set(reflect.New(v.Type()).Elem())
+		} else {
+			unmarshal(str, v.Elem(), level)
+		}
+	case reflect.Interface:
 		unmarshal(str, v.Elem(), level)
 	case reflect.Array:
 		count := v.Len()
-		if str == "[]" {
-			str = ""
-		}
 		for i := 0; i < count; i++ {
 			unmarshal(fields[i], v.Index(i), level+1)
 		}
@@ -133,9 +148,6 @@ func unmarshal(str string, v reflect.Value, level int) {
 			unmarshal(fields[i], v.Index(i), level+1)
 		}
 	case reflect.Struct:
-		if str == "{}" {
-			str = ""
-		}
 		count := v.NumField()
 		for i := 0; i < count; i++ {
 			unmarshal(fields[i], v.Field(i), level+1)
@@ -143,6 +155,7 @@ func unmarshal(str string, v reflect.Value, level int) {
 	case reflect.Map:
 		if str == "{}" {
 			str = ""
+			count = 0
 		}
 		t := v.Type()
 		elemType := t.Elem()

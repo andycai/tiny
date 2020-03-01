@@ -1,6 +1,6 @@
-# Ason
+# Tiny 
 
-Ason is another small object notation.
+Tiny is another small object notation.
 
     type Card struct {
         Id   int32
