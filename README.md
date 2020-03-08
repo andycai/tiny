@@ -116,4 +116,4 @@ Tiny is another small object notation.
 	fmt.Println("result: ", result)
 
     output:
-    b%3ab%3bb%27`false`2030`3.3333^1122`3344`5566^x%5e2%604%2fx%402%7c|51`x%7ex%2cx%5c|19^1|12`2|23`3|34^x|""`y|yyy`z|zzz^k1|vvv111~9`k2|vvv222~7^kk1|v3~1`kk2|v4~0^1`2`0.003^kkk1|s`kkk2|2
+    b%3ab%3bb%27`false`2030`3.3333^1122`3344`5566^x%5e2%604%2fx%402%7c|51`x%7ex%2cx%5c|19^1|12`2|23`3|34^x|""`y|y%40y%23y%24%2b%3d`z|z%26z%9fz%9c%9d%9e%3c%3e%3f%2f^k1|vvv111~9`k2|vvv222~7^kk1|v3~1`kk2|v4~0^1`2`0.003^kkk1|s`kkk2|2
