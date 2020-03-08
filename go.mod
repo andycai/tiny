@@ -1,4 +1,4 @@
-module github.com/andycai/ason
+module github.com/andycai/tiny
 
 go 1.12
 
