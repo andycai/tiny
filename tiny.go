@@ -7,7 +7,22 @@ import (
 	"github.com/spf13/cast"
 )
 
-var chars = []string{"`", "^", "~", "|", ">>", "<<", "[[", "]]", "{{", "}}", "::", ";;", ",,", "$$", "@@", "##", "&&"}
+var chars = []string{"^", "`", "|", "~", ",", ";", ":", "'", "\\", "/", "+", "=", "@", "#", "$", "&", "?", "<", ">", "-", "_", "(", ")", "!", "*"}
+var ecChars = []string{"%5e", "%60", "%7c", "%7e", "%2c", "%3b", "%3a", "%27", "%5c", "%2f", "%2b", "%3d", "%40", "%23", "%24", "%26", "%3f", "%3c", "%3e", "%9a", "%9b", "%9c", "%9d", "%9e", "%9f"}
+
+func encodeChar(s string) string {
+	for i, v := range chars {
+		s = strings.ReplaceAll(s, v, ecChars[i])
+	}
+	return s
+}
+
+func decodeChar(s string) string {
+	for i, v := range ecChars {
+		s = strings.ReplaceAll(s, v, chars[i])
+	}
+	return s
+}
 
 // Marshal struct to string
 func Marshal(v interface{}) string {
@@ -20,9 +35,9 @@ func marshal(v reflect.Value, level int) (result string) {
 	case reflect.Bool:
 		result += cast.ToString(v.Bool())
 	case reflect.String:
-		str := v.String()
+		str := encodeChar(v.String())
 		if str == "" {
-			str = "''"
+			str = "\"\""
 		}
 		result += str
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -114,7 +129,8 @@ func unmarshal(str string, v reflect.Value, level int) {
 	case reflect.Bool:
 		v.SetBool(cast.ToBool(str))
 	case reflect.String:
-		if str == "''" || str == "nil" {
+		str = decodeChar(str)
+		if str == "\"\"" || str == "nil" {
 			str = ""
 		}
 		v.SetString(str)

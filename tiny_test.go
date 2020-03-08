@@ -2,7 +2,6 @@ package ason
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -59,16 +58,16 @@ type E struct {
 }
 
 func TestTinyMarshalEmpty(t *testing.T) {
-	testStr := "''`''^''^''`0^0^0`[]`[]`{}`''^0`nil`nil"
+	testStr := "\"\"^\"\"`\"\"`\"\"^0`0`0^[]^[]^{}^\"\"`0^nil^nil"
 	e := E{}
 
 	result := Marshal(e)
 	assert.Equal(t, testStr, result)
-	// fmt.Println("result: ", result)
+	println("result: ", result)
 }
 
 func TestTinyUnmarshalEmpty(t *testing.T) {
-	testStr := "''`''^''^''`0^0^0`[]`[]`{}`''^0`nil`nil"
+	testStr := "\"\"^\"\"`\"\"`\"\"^0`0`0^[]^[]^{}^\"\"`0^nil^nil"
 	e := E{
 		S:  "hello",
 		S5: "interface",
@@ -79,15 +78,15 @@ func TestTinyUnmarshalEmpty(t *testing.T) {
 	assert.Nil(t, e.S4)
 	assert.Nil(t, e.S5)
 	s, _ := json.Marshal(e)
-	fmt.Println("result: ", string(s))
+	println("result: ", string(s))
 }
 
 func TestTinyMarshalCommon(t *testing.T) {
-	// testStr := "bbb^false^2030^3.3333`1122^3344^5566`x2x2~51^xxx~19`3~34^1~12^2~23`z~zzz^x~''^y~yyy`k1~vvv111|9^k2~vvv222|7`kk1~v3|1^kk2~v4|0`1^2^0.003`kkk1~s^kkk2~2"
+	// testStr := "bbb`false`2030`3.3333^1122`3344`5566^x2x2|51`xxx|19^1|12`2|23`3|34^x|\"\"`y|yyy`z|zzz^k1|vvv111~9`k2|vvv222~7^kk1|v3~1`kk2|v4~0^1`2`0.003^kkk1|s`kkk2|2"
 
 	c := C{
 		C1: B{
-			B1: "bbb",
+			B1: "b:b;b'",
 			B2: false,
 			B3: 2030,
 			B4: 3.3333,
@@ -99,11 +98,11 @@ func TestTinyMarshalCommon(t *testing.T) {
 		},
 		C3: []*D{
 			&D{
-				X: "x2x2",
+				X: "x^2`4/x@2|",
 				Y: 51,
 			},
 			&D{
-				X: "xxx",
+				X: "x~x,x\\",
 				Y: 19,
 			},
 		},
@@ -114,8 +113,8 @@ func TestTinyMarshalCommon(t *testing.T) {
 		},
 		C5: map[string]string{
 			"x": "",
-			"y": "yyy",
-			"z": "zzz",
+			"y": "y@y#y$+=",
+			"z": "z&z*z()!<>?/",
 		},
 		C6: map[string]D{
 			"k1": D{
@@ -147,14 +146,14 @@ func TestTinyMarshalCommon(t *testing.T) {
 
 	result := Marshal(c)
 	// assert.Equal(t, testStr, result)
-	fmt.Println("result: ", result)
+	println("result: ", result)
 }
 
 func TestTinyMarshalSimple(t *testing.T) {
-	testStr := "abcde`true`11`22`33`44`55`66.66"
+	testStr := "a%60b%7cc%5ed%7ee^true^11^22^33^44^55^66.66"
 
 	a := A{
-		A1: "abcde",
+		A1: "a`b|c^d~e",
 		A2: true,
 		A3: 11,
 		A4: int8(22),
@@ -165,14 +164,15 @@ func TestTinyMarshalSimple(t *testing.T) {
 	}
 	result := Marshal(a)
 	assert.Equal(t, testStr, result)
+	println("result: ", result)
 }
 
 func TestTinyUnmarshalSimple(t *testing.T) {
-	testStr := "abcde`true`11`22`33`44`55`66.66"
+	testStr := "abc%5ede^true^11^22^33^44^55^66.66"
 
 	a := A{}
 	Unmarshal(testStr, &a)
-	assert.Equal(t, "abcde", a.A1)
+	assert.Equal(t, "abc^de", a.A1)
 	assert.Equal(t, true, a.A2)
 	assert.Equal(t, 11, a.A3)
 	assert.Equal(t, int8(22), a.A4)
