@@ -1,7 +1,6 @@
-package ason
+package tiny
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,16 +57,16 @@ type E struct {
 }
 
 func TestTinyMarshalEmpty(t *testing.T) {
-	testStr := "\"\"^\"\"`\"\"`\"\"^0`0`0^[]^[]^{}^\"\"`0^nil^nil"
+	testStr := "{}^{}`{}`{}^0`0`0^{}^{}^{}^{}`0^{}^{}"
 	e := E{}
 
 	result := Marshal(e)
 	assert.Equal(t, testStr, result)
-	println("result: ", result)
+	// println("result: ", result)
 }
 
 func TestTinyUnmarshalEmpty(t *testing.T) {
-	testStr := "\"\"^\"\"`\"\"`\"\"^0`0`0^[]^[]^{}^\"\"`0^nil^nil"
+	testStr := "{}^{}`{}`{}^0`0`0^{}^{}^{}^{}`0^{}^{}"
 	e := E{
 		S:  "hello",
 		S5: "interface",
@@ -77,12 +76,12 @@ func TestTinyUnmarshalEmpty(t *testing.T) {
 	assert.Equal(t, "", e.S)
 	assert.Nil(t, e.S4)
 	assert.Nil(t, e.S5)
-	s, _ := json.Marshal(e)
-	println("result: ", string(s))
+	// s, _ := json.Marshal(e)
+	// println("result: ", string(s))
 }
 
 func TestTinyMarshalCommon(t *testing.T) {
-	// testStr := "bbb`false`2030`3.3333^1122`3344`5566^x2x2|51`xxx|19^1|12`2|23`3|34^x|\"\"`y|yyy`z|zzz^k1|vvv111~9`k2|vvv222~7^kk1|v3~1`kk2|v4~0^1`2`0.003^kkk1|s`kkk2|2"
+	// testStr := "bbb`false`2030`3.3333^1122`3344`5566^x2x2|51`xxx|19^1|12`2|23`3|34^x|{}`y|yyy`z|zzz^k1|vvv111~9`k2|vvv222~7^kk1|v3~1`kk2|v4~0^1`2`0.003^kkk1|s`kkk2|2"
 
 	c := C{
 		C1: B{
@@ -164,7 +163,7 @@ func TestTinyMarshalSimple(t *testing.T) {
 	}
 	result := Marshal(a)
 	assert.Equal(t, testStr, result)
-	println("result: ", result)
+	// println("result: ", result)
 }
 
 func TestTinyUnmarshalSimple(t *testing.T) {
@@ -180,6 +179,34 @@ func TestTinyUnmarshalSimple(t *testing.T) {
 	assert.Equal(t, int32(44), a.A6)
 	assert.Equal(t, int64(55), a.A7)
 	assert.Equal(t, 66.66, a.A8)
+}
+
+func TestTinyUnmarshalSimpleOmit(t *testing.T) {
+	// testStr := "abc%5ede^true^11^22^33^44^55^^66.6"
+	testStr := "abc%5ede"
+
+	a := A{
+		"ccc",
+		true,
+		11,
+		22,
+		33,
+		44,
+		55,
+		66.6,
+	}
+	Unmarshal(testStr, &a)
+	assert.Equal(t, "abc^de", a.A1)
+	assert.Equal(t, false, a.A2)
+	assert.Equal(t, 0, a.A3)
+	assert.Equal(t, int8(0), a.A4)
+	assert.Equal(t, int16(0), a.A5)
+	assert.Equal(t, int32(0), a.A6)
+	assert.Equal(t, int64(0), a.A7)
+	assert.Equal(t, float64(0), a.A8)
+
+	// s, _ := json.Marshal(a)
+	// println("result: ", string(s))
 }
 
 // type Card struct {
